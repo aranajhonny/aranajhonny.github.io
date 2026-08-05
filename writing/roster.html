@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Roster: managing a program directory from inside the platform — jhonny arana</title>
+    <title>Roster: managing a program directory from inside Membrane — jhonny arana</title>
     <meta name="description" content="A directory repo made of git submodules, a red dot when a program is outdated, and a one-click repin that moves the main branch from inside the platform.">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230b0a08'/%3E%3Crect x='8' y='8' width='16' height='16' fill='%23ffb224'/%3E%3C/svg%3E">
     <link rel="stylesheet" href="../css/style.css">
@@ -23,14 +23,14 @@
     <main class="wrap post">
       <a class="back mono" href="../blog.html">← all writing</a>
       <header class="post-head">
-        <p class="post-meta mono">2026-08-05 <span class="dot-sep">·</span> tools <span class="dot-sep">·</span> 6 min read</p>
-        <h1>Roster: managing a program directory from inside the platform</h1>
+        <p class="post-meta mono">2026-08-05 <span class="dot-sep">·</span> membrane <span class="dot-sep">·</span> 6 min read</p>
+        <h1>Roster: managing a program directory from inside Membrane</h1>
         <p class="lead">A directory repo made of git submodules, a red dot when a program is outdated, and a one-click repin that moves the main branch from inside the platform itself.</p>
       </header>
 
       <article class="post-body">
-        <p>The directory is a git repo that lists every program in the platform. Each program is a <strong>git submodule</strong> pinned at a specific commit. The directory repo is the index; the submodules are the entries.</p>
-        <p>Keeping that index honest is a chore: every release of every program changes a sha somewhere, and if nobody repins, the directory drifts from reality. Roster does the chore automatically and runs on the platform itself. It's ~280 lines of TypeScript plus one UI file.</p>
+        <p>Membrane's directory is a git repo that lists every program in the platform. Each program is a <strong>git submodule</strong> pinned at a specific commit. The directory repo is the index; the submodules are the entries.</p>
+        <p>Keeping that index honest is a chore: every release of every program changes a sha somewhere, and if nobody repins, the directory drifts from reality. Roster does the chore automatically and runs on Membrane itself. It's ~280 lines of TypeScript plus one UI file.</p>
 
         <h2>Finding the programs: the submodule signature</h2>
         <p>The GitHub API returns directory entries without a <code>download_url</code> and with <code>size === 0</code> for submodules. That's the fingerprint:</p>
@@ -97,7 +97,7 @@ return programs.filter(isSubmodule).map((item) =&gt; ({
         <ul>
           <li>A repo of submodules is a database with a bad UI. The whole tool exists to turn "check shas, repin, commit, push" into a red dot and a button.</li>
           <li>Compare shas, don't trust timestamps. Two API calls and a string comparison is all the freshness detection needs.</li>
-          <li>Admin tools get dogfooded when they run on the platform they administer. Roster manages the directory from inside the platform; the fix for a broken directory uses the same interface as the directory itself.</li>
+          <li>Admin tools get dogfooded when they run on the platform they administer. Roster manages Membrane from inside Membrane; the fix for a broken directory uses the same interface as the directory itself.</li>
           <li>Server-rendered HTML beats a client app for internal tools. No hydration, no API layer, no deploy of frontend assets; one endpoint renders the page.</li>
         </ul>
         <p>It's a small tool. The directory index matches reality, and the fix is one click away from the problem.</p>
