@@ -30,7 +30,7 @@
 
       <article class="post-body">
         <p>When an agent edits files in a sandbox while a human watches in their editor, you're running a multi-writer system. The agent writes, the human writes, and both think they own the file. We couldn't hand the agent raw disk access — it would overwrite human work and there'd be no way to undo it.</p>
-        <p>The answer at Membrane was a virtual file system: an in-memory tree that all writes flow through, with versioning, diffing and conflict detection built in. Everything the agent does is a patch on top of a version, never a destructive write.</p>
+        <p>The answer was a virtual file system: an in-memory tree that all writes flow through, with versioning, diffing and conflict detection built in. Everything the agent does is a patch on top of a version, never a destructive write.</p>
 
         <h2>Design: files are version lists</h2>
         <p>Each file is a list of versions. A snapshot is a map of <code>path → version_id</code>, and snapshots are cheap because the file contents are content-addressed and shared.</p>
