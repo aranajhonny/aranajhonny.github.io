@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 420" width="100%" role="img" aria-label="LTTB algorithm: triangle area selection">
+  <rect width="920" height="420" fill="#0b0a08"/>
+  <rect x="236.0" y="330.0" width="187.2" height="290.0" fill="#1a1710" stroke="#26221a" stroke-width="1"/>
+<rect x="454.4" y="330.0" width="187.20000000000005" height="290.0" fill="#14110c" stroke="#26221a" stroke-width="1"/>
+<line x1="80.0" y1="272.0" x2="860.0" y2="272.0" stroke="#1c1812" stroke-width="1"/>
+<line x1="80.0" y1="214.0" x2="860.0" y2="214.0" stroke="#1c1812" stroke-width="1"/>
+<line x1="80.0" y1="156.0" x2="860.0" y2="156.0" stroke="#1c1812" stroke-width="1"/>
+<line x1="80.0" y1="98.0" x2="860.0" y2="98.0" stroke="#1c1812" stroke-width="1"/>
+<polygon points="126.8,243.0 267.2,170.5 551.9,182.1" fill="none" stroke="#4a463f" stroke-width="1" stroke-dasharray="3 3"/>
+<polygon points="126.8,243.0 306.2,234.3 551.9,182.1" fill="none" stroke="#4a463f" stroke-width="1" stroke-dasharray="3 3"/>
+<polygon points="126.8,243.0 337.4,124.1 551.9,182.1" fill="none" stroke="#ffb224" stroke-width="1.6" stroke-dasharray=""/>
+<polygon points="126.8,243.0 368.6,202.4 551.9,182.1" fill="none" stroke="#4a463f" stroke-width="1" stroke-dasharray="3 3"/>
+<circle cx="267.2" cy="170.5" r="4.5" fill="#efede4"/>
+<circle cx="306.2" cy="234.3" r="4.5" fill="#efede4"/>
+<circle cx="337.4" cy="124.1" r="4.5" fill="#efede4"/>
+<circle cx="368.6" cy="202.4" r="4.5" fill="#efede4"/>
+<circle cx="485.6" cy="214.0" r="3.5" fill="#9a9385"/>
+<circle cx="532.4" cy="115.4" r="3.5" fill="#9a9385"/>
+<circle cx="571.4" cy="179.2" r="3.5" fill="#9a9385"/>
+<circle cx="602.6" cy="228.5" r="3.5" fill="#9a9385"/>
+<circle cx="551.9" cy="182.1" r="5.5" fill="#FDB813"/>
+<circle cx="126.8" cy="243.0" r="6" fill="#ffb224"/>
+<text x="116.8" y="231.0" font-family="ui-monospace, &quot;SF Mono&quot;, Menlo, Consolas, monospace" font-size="11.5" fill="#ffb224" text-anchor="middle" font-weight="normal">anchor A</text>
+<text x="567.9" y="176.1" font-family="ui-monospace, &quot;SF Mono&quot;, Menlo, Consolas, monospace" font-size="10.5" fill="#FDB813" text-anchor="start" font-weight="normal">average of next bucket</text>
+<text x="329.6" y="322.0" font-family="ui-monospace, &quot;SF Mono&quot;, Menlo, Consolas, monospace" font-size="10.5" fill="#efede4" text-anchor="middle" font-weight="normal">current bucket (candidates)</text>
+<text x="548.0" y="322.0" font-family="ui-monospace, &quot;SF Mono&quot;, Menlo, Consolas, monospace" font-size="10.5" fill="#efede4" text-anchor="middle" font-weight="normal">next bucket (average)</text>
+<text x="351.40000000000003" y="110.10000000000002" font-family="ui-monospace, &quot;SF Mono&quot;, Menlo, Consolas, monospace" font-size="11" fill="#ffb224" text-anchor="middle" font-weight="normal">max area → kept</text>
+<text x="351.40000000000003" y="142.10000000000002" font-family="ui-monospace, &quot;SF Mono&quot;, Menlo, Consolas, monospace" font-size="10" fill="#9a9385" text-anchor="middle" font-weight="normal">peak that must survive</text>
+<text x="80" y="46" font-family="ui-monospace, &quot;SF Mono&quot;, Menlo, Consolas, monospace" font-size="12.5" fill="#efede4" text-anchor="start" font-weight="normal">area = |(xₐ − x̄)(yⱼ − yₐ) − (xₐ − xⱼ)(ȳ − yₐ)|</text>
+</svg>

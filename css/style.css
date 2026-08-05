@@ -432,6 +432,24 @@ a.row:hover .arrow {
   color: var(--text);
 }
 
+.post-body figure {
+  margin: 2em 0;
+}
+
+.post-body figure img {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+}
+
+.post-body figcaption {
+  margin-top: 0.6em;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-family: var(--mono);
+}
+
 .post-body ul,
 .post-body ol {
   margin: 0 0 1.3em 1.3em;
@@ -503,6 +521,14 @@ a.row:hover .arrow {
   padding: 0;
   font-size: inherit;
 }
+
+/* syntax highlighting tokens (js/syntax.js) */
+.post-body .tok-k { color: #ffb224; }            /* keyword */
+.post-body .tok-s { color: #8fb573; }            /* string */
+.post-body .tok-c { color: #7a7468; font-style: italic; } /* comment */
+.post-body .tok-n { color: #7fb2c9; }            /* number */
+.post-body .tok-f { color: #d08fe0; }            /* function call */
+.post-body .tok-t { color: #6ba34a; }            /* type (uppercase) */
 
 .post-body table {
   width: 100%;

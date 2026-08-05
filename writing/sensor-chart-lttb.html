@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Rendering 100k sensor readings with LTTB — jhonny arana</title>
-    <meta name="description" content="Chart.js froze on 100k sensor readings per sensor. LTTB on the visible window, zoom without re-initializing, and the same algorithm in the nightly retention job.">
+    <meta name="description" content="Chart.js froze on 100k sensor readings per sensor. LTTB once per data change, native zoom over 2,000 points, and the same algorithm in the nightly retention job.">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230b0a08'/%3E%3Crect x='8' y='8' width='16' height='16' fill='%23ffb224'/%3E%3C/svg%3E">
     <link rel="stylesheet" href="../css/style.css">
   </head>
@@ -25,7 +25,7 @@
       <header class="post-head">
         <p class="post-meta mono">2026-08-05 <span class="dot-sep">·</span> charts <span class="dot-sep">·</span> 7 min read</p>
         <h1>Rendering 100k sensor readings with LTTB</h1>
-        <p class="lead">One sensor accumulates roughly 100k readings per semester. Chart.js froze on the full series, so every render downsamples to 2,000 points with LTTB, on the visible window only.</p>
+        <p class="lead">One sensor accumulates roughly 100k readings per semester. Chart.js froze on the full series, so every dataset is downsampled to 2,000 points with LTTB, once per data change.</p>
       </header>
 
       <article class="post-body">
@@ -33,8 +33,18 @@
         <p>ThermalTrack stores every reading from every thermal sensor. One sensor accumulates roughly 100k readings per semester. The chart endpoint returns the full series for the date range, so the browser had to draw all of it.</p>
         <p>Chart.js with 100k points froze the dashboard. Panning dropped frames. Tooltips took a second. Zoom made it worse: the whole array went through the renderer again on every frame.</p>
 
+        <figure>
+          <img src="figures/lttb-pipeline.svg" alt="Pipeline before and after: the renderer gets every point, then the renderer gets 2000 LTTB points." width="100%">
+          <figcaption>The bottleneck: 100k points reach the renderer, twice — once per frame while zooming. After the fix the API still returns everything; LTTB runs in the browser and caps every dataset at 2,000 points.</figcaption>
+        </figure>
+
         <h2>Why every Nth point fails</h2>
-        <p>Dropping every Nth point kills the peaks. Temperature alarms live in the peaks. A one-minute spike over the critical threshold can be the only point in an hour that matters, and N-th sampling can skip it.</p>
+        <p>Dropping every Nth point kills the peaks. Temperature alarms live in the peaks. A one-minute spike over the critical threshold can be the only point in an hour that matters, and N-th sampling can skip it. Same 60 days, three samplings:</p>
+
+        <figure>
+          <img src="figures/lttb-problem-point.svg" alt="Same 60 days: the full series shows two door-open spikes crossing the critical threshold; every-Nth sampling loses both; LTTB keeps both." width="100%">
+          <figcaption>Real series, one freezer sensor. Two door-open spikes cross the critical threshold (-12°C) in 60 days. Every-Nth (every 50th reading, 2,000 of 100k) drops both peaks. LTTB keeps both.</figcaption>
+        </figure>
         <p>LTTB (Largest Triangle Three Buckets) picks the points the shape needs. It splits the series into buckets. For each bucket it keeps the point whose triangle with the previous anchor and the next bucket's average has the biggest area. O(n), one pass:</p>
         <pre><code>function downsampleLTTB(data: NumPoint[], threshold: number): NumPoint[] {
   if (data.length &lt;= threshold || data.length &lt;= 3) return data;
@@ -80,54 +90,47 @@
 }</code></pre>
         <p>The result: 100k points become 2,000, and the spikes survive.</p>
 
-        <h2>Slice the window first</h2>
-        <p>Downsampling the full series on every zoom wastes time. The visible range is a small fraction of the data.</p>
-        <p>Two binary searches (bisectLeft, bisectRight) find the visible window. The slice gets 2% padding plus 3 extra points on each side, so lines enter and leave the viewport correctly at deep zoom. Then LTTB runs on the slice:</p>
-        <pre><code>const SMALL_SERIES_POINTS = 1000;
-const MIN_EXTRA_POINTS = 3;
+        <figure>
+          <img src="figures/lttb-triangle.svg" alt="LTTB picks the point in each bucket whose triangle with the previous anchor and the next bucket's average has the largest area." width="100%">
+          <figcaption>How LTTB picks one point per bucket. The anchor is the last kept point. The next bucket is reduced to its average. The candidate whose triangle has the biggest area wins — the spike is a big triangle, so it survives.</figcaption>
+        </figure>
 
-// simplified: empty-range fallback omitted
-function sliceAndDownsample(full: NumPoint[], xMin: number, xMax: number, maxPts: number) {
-  if (full.length &lt;= SMALL_SERIES_POINTS) return full;   // small series render as-is
-  if (xMin &gt; xMax) [xMin, xMax] = [xMax, xMin];
+        <h2>Downsample once, zoom for free</h2>
+        <p>LTTB runs on the full series every time data changes, not on the visible window, not on zoom. The chart holds 2,000 points and Chart.js zooms natively over them.</p>
+        <p>Re-slicing on zoom end was the first version. It caused loops: zoom re-sampled, sampling shifted the data, the chart jumped. The comment in the code says it plainly: <em>no re-downsample on zoom, Chart.js zooms naturally over the 2000 LTTB points, that avoids loops and inconsistencies</em>.</p>
+        <p>Deep zoom over 2,000 points loses nothing you can see. The chart draws the points it has; the shape was already chosen. Recomputing on every frame would only add jitter.</p>
 
-  const padding = (xMax - xMin) * 0.02;
-  let i0 = Math.max(0, bisectLeft(full, xMin - padding));
-  let i1 = Math.min(full.length, bisectRight(full, xMax + padding));
-  i0 = Math.max(0, i0 - MIN_EXTRA_POINTS);
-  i1 = Math.min(full.length, i1 + MIN_EXTRA_POINTS);
-
-  const slice = full.slice(i0, i1);
-  if (slice.length &lt;= maxPts) return slice;
-  return downsampleLTTB(slice, maxPts);
-}</code></pre>
-        <p>Deep zoom: the slice is small, so LTTB returns almost everything in range. Overview: the full series compresses to 2,000 shape-preserving points. One function covers both.</p>
+        <figure>
+          <img src="figures/lttb-overview.svg" alt="One year of readings: the full 100k-point series and the 2,000 LTTB points keep the same shape." width="100%">
+          <figcaption>One year, 100k readings. The 2,000 LTTB points (amber) trace the same shape — compressor cycles, daily drift, door spikes. 50x fewer points, same chart.</figcaption>
+        </figure>
 
         <h2>Zoom without re-initializing</h2>
-        <p>Zoom and pan run through chartjs-plugin-zoom on the x axis (wheel, drag, pinch). On zoom end the chart reslices the visible window and calls chart.update("none"). No animation pass, no re-init, same canvas.</p>
-        <p>Details that matter:</p>
+        <p>Zoom and pan run through chartjs-plugin-zoom on the x axis (wheel, drag, pinch). No re-init, same canvas, no animation pass. Details that matter:</p>
         <ul>
           <li>parsing: false. Timestamps are normalized to ms once, before Chart.js sees them. The library never parses a date.</li>
-          <li>The y axis is fixed from the full dataset. It does not jump while you zoom.</li>
-          <li>minRange is the smallest gap between samples. You can't zoom past the data's resolution.</li>
+          <li>animation: false. No tween between renders.</li>
+          <li>The y axis is fixed from the full dataset (plus thresholds), with 10% padding. It does not jump while you zoom. afterDataLimits forces the range back after zoom and pan.</li>
+          <li>minRange is three times the smallest gap between samples. You can't zoom past the data's resolution.</li>
           <li>The x axis targets ~50 ticks and switches units by visible range: minute, hour, day.</li>
         </ul>
 
         <h2>Live data while zoomed</h2>
-        <p>New readings arrive while the dashboard is open. If the user is zoomed within 5% of the last point, the window auto-follows and keeps its width. If the zoom is elsewhere, it stays and only the visible window redraws. Either way, the canvas never receives more than 2,000 points.</p>
+        <p>New readings arrive while the dashboard is open. The update handler re-runs LTTB on the full series for every dataset. If the user is zoomed, the x axis min/max stay untouched — the zoom survives, the canvas still gets 2,000 points. If not zoomed, the axis extends to the new range and thresholds span it.</p>
+        <p>Discrete sensors (door open/closed, compressor on/off) skip LTTB entirely. They have few points and the category axis needs every transition.</p>
 
         <h2>The same algorithm, server side</h2>
         <p>The browser fix was not enough. Old data keeps growing, and nobody needs the full 100k points for a sensor from three months ago.</p>
-        <p>A nightly job runs the same LTTB on readings older than 30 days and keeps 3,000 points per sensor, 20 sensors in parallel. The database stores the compressed history; the client re-compresses every render.</p>
+        <p>A nightly job runs the same LTTB on readings older than 30 days and keeps 3,000 points per sensor, 20 sensors in parallel. It selects each sensor's old rows, runs LTTB, and deletes everything that did not survive with a single NOT IN. The database stores the compressed history; the client re-compresses every render.</p>
 
         <h2>Lessons</h2>
         <ul>
-          <li>Downsample at the last moment, on the visible window. Anything earlier wastes work.</li>
+          <li>Downsample once, at the data boundary. Anything earlier wastes work; anything per-frame causes loops.</li>
           <li>Keep the shape, not the cadence. LTTB keeps spikes; every-Nth keeps rhythm and loses events.</li>
-          <li>Range slicing is binary search, not a filter. Two bisects turn 100k points into a visible slice without a scan.</li>
-          <li>The same algorithm runs twice: in the browser for rendering, in the nightly job for retention.</li>
+          <li>One algorithm, two sides: the browser renders 2,000 points per dataset, the nightly job caps history at 3,000 per sensor.</li>
+          <li>Precision costs. parsing: false and animation: false are free wins on a chart that updates constantly.</li>
         </ul>
-        <p>The whole fix is about 40 lines of LTTB and two binary searches. The dashboard stays interactive at any zoom level, and the chart endpoint still returns the full series, untouched.</p>
+        <p>The whole fix is about 40 lines of LTTB. The dashboard stays interactive at any zoom level, and the chart endpoint still returns the full series, untouched.</p>
       </article>
 
       <nav class="post-nav mono" aria-label="post navigation">
@@ -150,5 +153,6 @@ function sliceAndDownsample(full: NumPoint[], xMin: number, xMax: number, maxPts
     </footer>
 
     <script src="../js/main.js"></script>
+    <script src="../js/syntax.js"></script>
   </body>
 </html>
