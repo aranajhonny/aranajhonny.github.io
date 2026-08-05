@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Zero-hallucination RAG: grounded answers over 936 Lex Fridman episodes — jhonny arana</title>
+    <meta name="description" content="19,140 chunks, intent routing, and a groundedness check that rejects answers the transcripts don't support.">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230b0a08'/%3E%3Crect x='8' y='8' width='16' height='16' fill='%23ffb224'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="../css/style.css">
+  </head>
+  <body>
+    <header class="site-head">
+      <div class="wrap nav">
+        <a class="logo" href="../index.html">jhonnyarana</a>
+        <nav class="nav-links" aria-label="primary">
+          <a href="../index.html">index</a>
+          <a href="../blog.html">writing</a>
+          <a href="https://github.com/aranajhonny" target="_blank" rel="noopener">github ↗</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="wrap post">
+      <a class="back mono" href="../blog.html">← all writing</a>
+      <header class="post-head">
+        <p class="post-meta mono">2026-03-20 <span class="dot-sep">·</span> rag <span class="dot-sep">·</span> 8 min read</p>
+        <h1>Zero-hallucination RAG: grounded answers over 936 Lex Fridman episodes</h1>
+        <p class="lead">Every answer cites its source. Intent routing, Qdrant, and a groundedness check that rejects answers the transcripts don't support.</p>
+      </header>
+
+      <article class="post-body">
+        <p>A chatbot that answers questions about podcast episodes has one unforgivable failure mode: inventing a quote. "What did Lex say about loneliness?" — and the model confidently produces a sentence that sounds exactly like Lex but was never spoken.</p>
+        <p><a href="https://github.com/aranajhonny/omnipod" target="_blank" rel="noopener">OmniPod</a> is a chat over 936 Lex Fridman episodes where every answer is grounded, verified against the actual transcript before it reaches the user. If the source doesn't support the answer, it says so. The whole system is 1,138 lines of Python across 9 files.</p>
+
+        <h2>Corpus and ingestion: no API keys</h2>
+        <p>Two scrapers feed the index, both free: official transcript pages on lexfridman.com (requests + BeautifulSoup) and YouTube auto-captions via a public proxy. No YouTube API key, no paid source. All 936 episodes ingest in about <strong>8 minutes</strong>.</p>
+        <p>Chunking is deliberately boring: 512 characters with 128 overlap, each chunk tagged with its episode and guest metadata so retrieval can filter by guest. That yields <strong>19,140 chunks</strong>, small enough that a single laptop instance handles the whole corpus.</p>
+
+        <h2>Retrieval: local embeddings, one vector DB</h2>
+        <p>Chunks are embedded with <code>bge-small-en-v1.5</code> (384 dims) running locally on MPS, ~100ms per query embedding. Search is cosine similarity in Qdrant: ~50ms at 19K points, with guest metadata filtering built in.</p>
+        <p>Why this stack, concretely:</p>
+        <ul>
+          <li><strong>bge-small over a bigger model</strong>: 384-dim vectors are fast to search and good enough for conversational podcast text. It runs on a laptop GPU, so embedding costs $0 and never leaves the machine.</li>
+          <li><strong>Qdrant over an embedded store</strong>: filterable metadata out of the box, and cosine search at this scale is milliseconds.</li>
+        </ul>
+
+        <h2>The router: one prompt fails at scale</h2>
+        <p>Not every question wants the same pipeline. "What did Huberman say about sleep?" and "Compare AI safety views across guests" and "Write an essay on consciousness" are three different problems. OmniPod classifies intent first, then dispatches:</p>
+        <table>
+          <tr><th>type</th><th>example</th><th>strategy</th></tr>
+          <tr><td>factual</td><td>"What did Huberman say about sleep?"</td><td>retrieve → generate → verify</td></tr>
+          <tr><td>synthetic</td><td>"Compare AI safety views across guests"</td><td>map-reduce → deduplicate → synthesize</td></tr>
+          <tr><td>generative</td><td>"Write an essay on consciousness"</td><td>plan → draft → ground</td></tr>
+        </table>
+        <p>An LRU cache avoids re-embedding repeated queries, and a semaphore caps concurrent LLM calls at 5 so bursty sessions don't blow the budget.</p>
+
+        <h2>The groundedness check</h2>
+        <p>Every generated answer runs through <code>verify_groundedness()</code> before it's shown:</p>
+        <pre><code># verify_groundedness() — the last gate before the UI
+def verify_groundedness(answer: str, context: list[Chunk]) -&gt; str:
+    prompt = (
+        "Check every factual claim in the answer against the context. "
+        "For each claim return SUPPORTED, UNSUPPORTED, or NOT_IN_CONTEXT. "
+        "If any claim is unsupported or missing, name it and explain why."
+    )
+    verdict = llm(prompt, answer=answer, context=context)
+    if verdict.strip() != "OK":
+        return refuse_or_rephrase(answer, verdict)  # says "not covered" — never guesses
+    return answer</code></pre>
+        <p>The model must defend each claim against the retrieved text. When the transcripts don't cover a question, the answer is explicit about it instead of papering over the gap.</p>
+
+        <h2>Numbers that matter</h2>
+        <table>
+          <tr><th>metric</th><th>value</th></tr>
+          <tr><td>episodes indexed</td><td>936 lex fridman</td></tr>
+          <tr><td>chunks</td><td>19,140 (512 chars, 128 overlap)</td></tr>
+          <tr><td>embedding dim</td><td>384 (bge-small-en-v1.5, MPS GPU)</td></tr>
+          <tr><td>query embedding</td><td>~100ms</td></tr>
+          <tr><td>vector search</td><td>~50ms (cosine, 19K points)</td></tr>
+          <tr><td>full answer</td><td>~2s on M1 Pro</td></tr>
+          <tr><td>codebase</td><td>1,138 lines python, 9 files</td></tr>
+        </table>
+
+        <h2>Lessons</h2>
+        <ul>
+          <li>The verify step enforces groundedness. That's what makes "no hallucinations" a property of the pipeline instead of a hope.</li>
+          <li>Route by intent before doing anything else. One retrieve-answer prompt for every question type is what makes RAG chatbots feel dumb.</li>
+          <li>Small and local wins at this scale. A 384-dim model on a laptop GPU, one vector DB container, one LLM call, and the whole thing answers in ~2 seconds.</li>
+        </ul>
+        <p>The system answers with confidence only where the transcripts are confident, and every answer carries a source you can check.</p>
+      </article>
+
+      <nav class="post-nav mono" aria-label="post navigation">
+        <a href="bpe-tokenizer-rust.html">← previous: bpe tokenizer</a>
+        <span class="gap"></span>
+        <a href="agent-vfs.html">next: the agent vfs →</a>
+      </nav>
+    </main>
+
+    <footer class="site-foot">
+      <div class="wrap">
+        <div class="foot-links mono">
+          <a href="mailto:jhonnyjosearana@gmail.com">jhonnyjosearana@gmail.com</a>
+          <a href="https://github.com/aranajhonny" target="_blank" rel="noopener">github ↗</a>
+          <a href="https://www.linkedin.com/in/aranajhonny" target="_blank" rel="noopener">linkedin ↗</a>
+          <a href="https://twitter.com/aranajhonny" target="_blank" rel="noopener">twitter/x ↗</a>
+        </div>
+        <p class="small-print mono">© <span id="year"></span> jhonny arana · html, css &amp; vanilla js</p>
+      </div>
+    </footer>
+
+    <script src="../js/main.js"></script>
+  </body>
+</html>

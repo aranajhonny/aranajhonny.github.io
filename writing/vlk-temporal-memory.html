@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Vlk²: teaching agents to stop repeating their mistakes — jhonny arana</title>
+    <meta name="description" content="A temporal state machine for agents: PRESENT, PAST, FUTURE — and why it archives a repeated error loop after three tries.">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230b0a08'/%3E%3Crect x='8' y='8' width='16' height='16' fill='%23ffb224'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="../css/style.css">
+  </head>
+  <body>
+    <header class="site-head">
+      <div class="wrap nav">
+        <a class="logo" href="../index.html">jhonnyarana</a>
+        <nav class="nav-links" aria-label="primary">
+          <a href="../index.html">index</a>
+          <a href="../blog.html">writing</a>
+          <a href="https://github.com/aranajhonny" target="_blank" rel="noopener">github ↗</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="wrap post">
+      <a class="back mono" href="../blog.html">← all writing</a>
+      <header class="post-head">
+        <p class="post-meta mono">2026-04-02 <span class="dot-sep">·</span> agents <span class="dot-sep">·</span> 7 min read</p>
+        <h1>Vlk²: teaching agents to stop repeating their mistakes</h1>
+        <p class="lead">Same error three times, three different files. Instead of trying a fourth approach, the agent should learn. That's the problem Vlk² solves.</p>
+      </header>
+
+      <article class="post-body">
+        <p>Watch an agent work on a real codebase and the same failure plays out over and over: it hits a Rust compile error, tries a fix, hits it again in another file, tries another fix, hits it a third time. Each attempt consumes tokens, wall time, and user patience. The agent's context window scrolls the earlier failures out of view, and the memory systems available today store facts and preferences, not "this approach is broken."</p>
+        <p>Vlk² is a single Rust binary that runs over MCP, backed by SQLite. It gives an agent a sense of time: what's happening now (PRESENT), what's already been tried (PAST), and what should guide future decisions (FUTURE). When the same error repeats, it acts.</p>
+
+        <h2>The temporal state machine</h2>
+        <p>Every memory entry lives in one of four states:</p>
+        <ul>
+          <li><strong>PRESENT</strong>: active context the agent works with</li>
+          <li><strong>PAST</strong>: archived, out of context, but auditable</li>
+          <li><strong>FUTURE</strong>: preventive constraints that shape what the agent attempts</li>
+          <li><strong>PURGED</strong>: forgotten, for the entries that deserve it</li>
+        </ul>
+        <p>A background consolidation agent (30s cycle) scans entries, evaluates importance, archives stale ones, and forgets disconnected ones. Every 30 seconds it also checks the token budget: if PRESENT + FUTURE exceed 8K tokens, the lowest-importance entries get archived until the context fits. The agent's context stays bounded no matter how long the session runs.</p>
+
+        <h2>Loop detection: fingerprint by type, not by string</h2>
+        <p>String matching fails here. The same error appears with different line numbers, timestamps, and file paths: <code>error[E0277]</code> in <code>lib.rs:10</code> and <code>error[E0277]</code> in <code>main.rs:220</code> are the same failure, twice. Vlk² fingerprints errors by language and type:</p>
+        <pre><code>// fingerprint by type — near-duplicates count as one pattern
+fn fingerprint(line: &amp;str) -&gt; Fingerprint {
+    if line.contains("error[E")          { return Rust }        // error[E0277]
+    if line.contains("TS")               { return TypeScript }  // TS2345
+    if line.contains("TypeError")        { return Python }
+    if line.contains("panic:")           { return Go }
+    if line.contains("503 Service")      { return Http }
+    if line.contains("expected:")        { return Test }
+    TimestampStripped(line[..80])                            // fallback
+}</code></pre>
+        <p>When the same fingerprint appears <strong>three times</strong>, Vlk² auto-archives the whole loop to PAST and injects a FUTURE constraint into the context. The next time the agent fetches context, it sees something like:</p>
+        <blockquote>[SYSTEM ANCHOR] error[E0277] has repeated 3 times. This approach is failing; do not retry it. Consider a different strategy.</blockquote>
+        <p>The agent stops retrying. The system makes the broken approach unavailable.</p>
+
+        <h2>Why constraints, not answers</h2>
+        <p>A loop-breaking system has to be conservative. It shouldn't tell the agent what to do; it should tell it what not to do and let the model's own reasoning pick the path. That's why injected lessons are revocable: <code>vlk_revoke_future</code> removes a constraint when it was learned from a misdiagnosis, and <code>vlk_pin_memory</code> protects patterns that should never be forgotten.</p>
+        <p>Every recall also reconsolidates: if a new observation contradicts what the agent believes, the memory rewrites itself rather than accumulating noise.</p>
+
+        <h2>The verification loop</h2>
+        <p>The core path is E2E-tested with a smoke test that speaks raw JSON-RPC to the binary:</p>
+        <pre><code># send the same rust error 3 times, then fetch context
+for i in range(3):
+    rpc({"method": "tools/call", "params": {
+        "name": "vlk_record_state",
+        "arguments": {"raw_log": "error[E0277]: cannot add `str` to `str`",
+                      "file_context": f"lib.rs:{i*10}"}}})
+
+r = rpc({"method": "tools/call", "params": {
+    "name": "vlk_fetch_context", "arguments": {}}})
+
+# assertion: loop archived + constraint injected
+assert "E0277" in r.text
+assert "SYSTEM ANCHOR" in r.text  # → PASS</code></pre>
+        <p>The binary speaks MCP over stdin/stdout — one JSON-RPC line per message — so it drops into any MCP client: Hermes, Claude Code, Codex, OpenCode. No server to deploy, no port to open. The whole thing is a 6.4MB executable.</p>
+
+        <h2>Architecture</h2>
+        <p>SQLite does the remembering; Rust does the deciding.</p>
+        <pre><code>memory_contents (immutable, team-agnostic)
+  └── FK ──► agent_timeline (PRESENT / PAST / FUTURE / PURGED)
+               ├── memory_metadata (temporal vectors, importance, connectivity)
+               └── semantic_facts (distilled patterns from errors)
+                    └── fact_contradictions (resolution tracking)
+
+consolidation agent (background tokio, 30s cycle)
+  SCAN → EVALUATE importance → BUDGET_CHECK → ARCHIVE low-value → FORGET stale</code></pre>
+
+        <h2>Lessons</h2>
+        <ul>
+          <li>Forgetting is a feature. Without PURGED and the token budget, memory systems grow until they become the context problem they were meant to solve.</li>
+          <li>Fingerprint by type, group near-duplicates. String matching flags the same failure as "new" every time.</li>
+          <li>Constraints must be revocable. The system will misdiagnose; when it does, the agent has to be able to undo the lesson.</li>
+          <li>A specialized fault-detection layer beats a general memory system at its own job. Vlk² runs alongside memory systems and does one thing they don't: break the loop.</li>
+        </ul>
+        <p>Three identical errors, one constraint, zero retries. The mechanism is general: any past→present→future transition an agent cares about can be tracked the same way.</p>
+      </article>
+
+      <nav class="post-nav mono" aria-label="post navigation">
+        <a href="agent-vfs.html">← previous: the agent vfs</a>
+        <span class="gap"></span>
+        <a href="../blog.html">all writing →</a>
+      </nav>
+    </main>
+
+    <footer class="site-foot">
+      <div class="wrap">
+        <div class="foot-links mono">
+          <a href="mailto:jhonnyjosearana@gmail.com">jhonnyjosearana@gmail.com</a>
+          <a href="https://github.com/aranajhonny" target="_blank" rel="noopener">github ↗</a>
+          <a href="https://www.linkedin.com/in/aranajhonny" target="_blank" rel="noopener">linkedin ↗</a>
+          <a href="https://twitter.com/aranajhonny" target="_blank" rel="noopener">twitter/x ↗</a>
+        </div>
+        <p class="small-print mono">© <span id="year"></span> jhonny arana · html, css &amp; vanilla js</p>
+      </div>
+    </footer>
+
+    <script src="../js/main.js"></script>
+  </body>
+</html>

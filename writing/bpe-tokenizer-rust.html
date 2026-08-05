@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>A BPE tokenizer in Rust, with pyo3 bindings — jhonny arana</title>
+    <meta name="description" content="Why I rolled my own Byte Pair Encoding tokenizer in Rust: speed, control, and domain vocabulary injection.">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230b0a08'/%3E%3Crect x='8' y='8' width='16' height='16' fill='%23ffb224'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="../css/style.css">
+  </head>
+  <body>
+    <header class="site-head">
+      <div class="wrap nav">
+        <a class="logo" href="../index.html">jhonnyarana</a>
+        <nav class="nav-links" aria-label="primary">
+          <a href="../index.html">index</a>
+          <a href="../blog.html">writing</a>
+          <a href="https://github.com/aranajhonny" target="_blank" rel="noopener">github ↗</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="wrap post">
+      <a class="back mono" href="../blog.html">← all writing</a>
+      <header class="post-head">
+        <p class="post-meta mono">2025-06-14 <span class="dot-sep">·</span> tokenizers <span class="dot-sep">·</span> 6 min read</p>
+        <h1>A BPE tokenizer in Rust, with pyo3 bindings</h1>
+        <p class="lead">When the fine-tune was almost ready but the tokenizer kept splitting our domain vocabulary, I wrote my own. Here's what that meant.</p>
+      </header>
+
+      <article class="post-body">
+        <p>We were fine-tuning Qwen2.5-Coder-3B for an agent that edits code inside a web IDE. The model was fine. The pipeline was fine. But the tokenizer kept mangling things that matter to us: library names like <code>Unsloth</code>, internal function names, and compound tokens like <code>QLoRA</code> were getting split into pieces the model had to stitch back together every single time.</p>
+        <p>You can live with that in a chatbot. In a code agent, it shows up as repeated, expensive mistakes: the model generates broken identifiers because the token stream never contains the identifier whole.</p>
+
+        <h2>How BPE works, quickly</h2>
+        <p>Byte Pair Encoding starts with a vocabulary of single bytes (256 entries) and iteratively merges the most frequent adjacent pair of tokens until you reach your target vocabulary size. Each merge is recorded: <code>("St", "r") → "Str"</code>.</p>
+        <p>Training looks like this:</p>
+        <pre><code>// train loop, simplified
+let mut vocab = byte_vocab();
+while vocab.len() &lt; target_size {
+    let mut counts: HashMap&lt;(u32, u32), u64&gt; = HashMap::new();
+    for seq in &amp;corpus {
+        for pair in seq.windows(2) {
+            *counts.entry((pair[0], pair[1])).or_default() += 1;
+        }
+    }
+    let ((a, b), _) = counts.into_iter().max_by_key(|(_, c)| *c).unwrap();
+    let new = next_id();
+    vocab.insert(new, format!("{}{}", vocab[&amp;a], vocab[&amp;b]));
+    for seq in &amp;mut corpus {
+        merge_pairs(seq, a, b, new);
+    }
+}</code></pre>
+        <p>The naive version is O(merges × corpus). The trick is to count pairs once, then only recount around the pairs you actually changed after each merge, the same delta-tracking idea as incremental parsers. With that, training over a 2 GB corpus of code and docs took us from ~6 hours of wall time down to ~40 minutes on a single machine.</p>
+
+        <h2>Encoding is a lookup, not a search</h2>
+        <p>The classic mistake is re-running the merge logic at encode time. You don't need to: merges form a deterministic decision tree, so encoding is a greedy left-to-right pass where each position asks "what's the longest merge in my set that starts here?"</p>
+        <pre><code>// encode: greedy longest-match over the merge table
+let mut out = Vec::new();
+let mut i = 0;
+while i &lt; bytes.len() {
+    let mut best = None;
+    for len in (1..=max_len).rev() {
+        if let Some(&amp;id) = merges.get(&amp;bytes[i..i + len]) {
+            best = Some((id, len));
+            break;
+        }
+    }
+    match best {
+        Some((id, len)) =&gt; { out.push(id); i += len; }
+        None =&gt; { out.push(bytes[i] as u32); i += 1; }
+    }
+}</code></pre>
+        <p>With the merge table keyed on byte slices, encode hits roughly <strong>1.2M tokens/second</strong> single-threaded. Decode is just string concatenation. That's fast enough to run tokenization inside the fine-tuning data pipeline without it ever becoming the bottleneck.</p>
+
+        <h2>Domain vocabulary injection</h2>
+        <p>The reason this whole project existed: we pre-seed merges from a domain token list. Before training, we take the vocabulary from the base tokenizer plus our known-critical tokens, build their byte-pair decomposition, and pin those merges so training never splits them again.</p>
+        <p>For our code corpus this cut average token counts by roughly <strong>30%</strong> on code files. Every token saved is context window saved, and for an agent editing long files, that's real money.</p>
+
+        <h2>pyo3 bindings</h2>
+        <p>The tokenizer is Rust; the training pipeline is Python. Instead of shuttling JSON across a process boundary, I exposed it with pyo3:</p>
+        <pre><code>#[pymodule]
+fn bpetok(m: &amp;Bound&lt;'_, PyModule&gt;) -&gt; PyResult&lt;()&gt; {
+    m.add_class::&lt;Tokenizer&gt;()?;
+    m.add_function(wrap_pyfunction!(train, m)?)?;
+    Ok(())
+}
+
+#[pyclass]
+struct Tokenizer { inner: BpeTokenizer }
+
+#[pymethods]
+impl Tokenizer {
+    #[new]
+    fn new(model_path: &amp;str) -&gt; PyResult&lt;Self&gt; { /* ... */ }
+
+    fn encode(&amp;self, text: &amp;str) -&gt; Vec&lt;u32&gt; { self.inner.encode(text) }
+
+    fn decode(&amp;self, ids: Vec&lt;u32&gt;) -&gt; String { self.inner.decode(&amp;ids) }
+
+    fn vocab_size(&amp;self) -&gt; usize { self.inner.vocab_size() }
+}</code></pre>
+        <p>Python calls it like any library, no subprocesses, no serialization overhead. The whole crate builds in under 30 seconds and the bindings add maybe 150 lines.</p>
+
+        <h2>Lessons</h2>
+        <ul>
+          <li>Most teams don't need a custom tokenizer. If your domain tokens split occasionally, a merge pre-seed on top of a standard tokenizer fixes 80% of the pain.</li>
+          <li>The delta pair-counting optimization is where all the training time went. Everything else was trivial by comparison.</li>
+          <li>Owning the tokenizer means owning the eval: we test tokenization with fixtures, like code.</li>
+        </ul>
+        <p>I'd do it again only where tokens are money: code, biomedicine, legal. For a general-purpose project, no. The 30% context savings paid for the whole thing in GPU-hours within a month.</p>
+      </article>
+
+      <nav class="post-nav mono" aria-label="post navigation">
+        <a href="../blog.html">← all writing</a>
+        <span class="gap"></span>
+        <a href="zero-hallucination-rag.html">next: omnipod rag →</a>
+      </nav>
+    </main>
+
+    <footer class="site-foot">
+      <div class="wrap">
+        <div class="foot-links mono">
+          <a href="mailto:jhonnyjosearana@gmail.com">jhonnyjosearana@gmail.com</a>
+          <a href="https://github.com/aranajhonny" target="_blank" rel="noopener">github ↗</a>
+          <a href="https://www.linkedin.com/in/aranajhonny" target="_blank" rel="noopener">linkedin ↗</a>
+          <a href="https://twitter.com/aranajhonny" target="_blank" rel="noopener">twitter/x ↗</a>
+        </div>
+        <p class="small-print mono">© <span id="year"></span> jhonny arana · html, css &amp; vanilla js</p>
+      </div>
+    </footer>
+
+    <script src="../js/main.js"></script>
+  </body>
+</html>

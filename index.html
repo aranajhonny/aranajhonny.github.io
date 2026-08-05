@@ -1,22 +1,180 @@
 <!doctype html>
-<html>
+<html lang="en" class="no-js">
   <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>by aranajhonny</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-  <style type="text/css">
-    body{
-      font-size: 16px;
-    }
-    a{
-        font-size: 1.2em;
-        text-decoration: none;
-        color: white;   
-    }
-  </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>jhonny arana — software engineer</title>
+    <meta name="description" content="Jhonny Arana — software engineer working on AI infrastructure and developer tools. Rust, TypeScript, Python, LLMs.">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230b0a08'/%3E%3Crect x='8' y='8' width='16' height='16' fill='%23ffb224'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="css/style.css">
   </head>
   <body>
-    <strong>Follow me -> </strong><a href="https://twitter.com/aranajhonny">@aranajhonny</a>
+    <header class="site-head">
+      <div class="wrap nav">
+        <a class="logo" href="index.html">jhonnyarana</a>
+        <nav class="nav-links" aria-label="primary">
+          <a href="index.html" aria-current="page">index</a>
+          <a href="blog.html">writing</a>
+          <a href="https://github.com/aranajhonny" target="_blank" rel="noopener">github ↗</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero wrap">
+        <h1 class="hero-title reveal">Jhonny Arana.</h1>
+        <p class="hero-role mono reveal" style="--d:.05s">software engineer · ai infrastructure &amp; developer tools · remote</p>
+        <p class="hero-type mono reveal" style="--d:.1s">
+          <span class="ps">$</span><span id="type"></span><span class="cursor" aria-hidden="true"></span>
+        </p>
+      </section>
+
+      <section class="wrap sec" id="about">
+        <h2 class="eyebrow reveal" style="margin-bottom:16px">01 · about</h2>
+        <p class="about-line reveal">Seven years building software for the web: frontends, backends, and lately the AI that writes both. I like small systems that do one thing well.</p>
+        <div class="skill-lines mono reveal" style="--d:.05s">
+          <p><span class="accent">tools</span> · rust · typescript · python · node.js · react · postgresql · redis · docker · websocket</p>
+          <p><span class="accent">ai</span> · bpe tokenization · rag · mcp · agents · vector search · prompt engineering</p>
+        </div>
+      </section>
+
+      <section class="wrap sec" id="learning">
+        <h2 class="eyebrow reveal" style="margin-bottom:16px">02 · learning</h2>
+        <p class="skill-lines mono reveal" style="margin-bottom:18px">plan 2026 · 16 weeks · ~224h · ~3.5h/day · ends 22 nov</p>
+        <div class="rows reveal">
+          <div class="row info">
+            <span class="when mono">done</span>
+            <span class="what">condensed math · pytorch blitz · cs230 · bbc english</span>
+            <span class="extra mono">jul 2026</span>
+          </div>
+          <div class="row info cur">
+            <span class="when mono">current</span>
+            <span class="what">s1 · math · algebra · calculus · minimal stats</span>
+            <span class="extra mono">3–9 aug</span>
+          </div>
+          <div class="row info">
+            <span class="when mono">next</span>
+            <span class="what">s2 · pytorch blitz + llm apis structured outputs</span>
+            <span class="extra mono">10–16 aug</span>
+          </div>
+          <div class="row info">
+            <span class="when mono">coming</span>
+            <span class="what">rag · langgraph + mcp · transformers cs224n · qlora · 2 projects · interview prep</span>
+            <span class="extra mono">aug → nov</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="wrap sec" id="experience">
+        <h2 class="eyebrow reveal" style="margin-bottom:16px">03 · experience</h2>
+        <div class="rows reveal">
+          <div class="row info">
+            <span class="when mono">jun 2026 —</span>
+            <span class="what">s2tindustriales.com</span>
+            <span class="extra mono">senior engineer · iot thermal monitoring · react · node · mysql · redis · ws</span>
+          </div>
+          <div class="row info">
+            <span class="when mono">jan — may 2026</span>
+            <span class="what">Wai.lat</span>
+            <span class="extra mono">ai engineer · whatsapp ai saas · prompt stacking · rag · handoff</span>
+          </div>
+          <div class="row info">
+            <span class="when mono">jan 2023 — jan 2026</span>
+            <span class="what">Membrane</span>
+            <span class="extra mono">senior engineer · ai web ide · agents editing code in a sandbox · vfs · vscode</span>
+          </div>
+          <div class="row info">
+            <span class="when mono">dec 2020 — nov 2022</span>
+            <span class="what">Alphas Remote Team</span>
+            <span class="extra mono">lead frontend · react · dashboards · port monitoring · education</span>
+          </div>
+          <div class="row info">
+            <span class="when mono">may 2020 — dec 2021</span>
+            <span class="what">Bee Marketing</span>
+            <span class="extra mono">frontend developer · react, wp · sites · woocommerce</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="wrap sec" id="projects">
+        <h2 class="eyebrow reveal" style="margin-bottom:16px">04 · projects</h2>
+        <div class="rows reveal">
+          <a class="row" href="https://github.com/aranajhonny/omnipod" target="_blank" rel="noopener">
+            <span class="when mono">python · rag</span>
+            <span class="what">OmniPod</span>
+            <span class="extra mono">chat with 936 lex fridman episodes · every answer cites its source <span class="tags">· 19,140 chunks · groundedness check</span></span>
+            <span class="arrow">↗</span>
+          </a>
+          <a class="row" href="https://github.com/aranajhonny/vlk" target="_blank" rel="noopener">
+            <span class="when mono">rust · mcp</span>
+            <span class="what">Vlk²</span>
+            <span class="extra mono">temporal state machine for agents · detects repeated errors, injects preventive constraints <span class="tags">· sqlite · 6.4mb binary</span></span>
+            <span class="arrow">↗</span>
+          </a>
+          <a class="row" href="https://github.com/aranajhonny/ArborFS" target="_blank" rel="noopener">
+            <span class="when mono">ts · browser</span>
+            <span class="what">ArborFS</span>
+            <span class="extra mono">browser virtual file system · indexeddb + optional remote sync, zero deps <span class="tags">· npm: arborfs</span></span>
+            <span class="arrow">↗</span>
+          </a>
+          <a class="row" href="https://github.com/membrane-io/membrane-agi" target="_blank" rel="noopener">
+            <span class="when mono">ts · agents</span>
+            <span class="what">Membrane AGI</span>
+            <span class="extra mono">babyagi-style task agent on membrane + openai · embedding-based tool selection <span class="tags">· membrane-io</span></span>
+            <span class="arrow">↗</span>
+          </a>
+          <a class="row" href="https://github.com/aranajhonny/VectorCalc" target="_blank" rel="noopener">
+            <span class="when mono">js · npm</span>
+            <span class="what">VectorCalc</span>
+            <span class="extra mono">lightweight vector magnitude calculator <span class="tags">· npm: vectorcalc</span></span>
+            <span class="arrow">↗</span>
+          </a>
+          <a class="row" href="https://github.com/membrane-io/roster" target="_blank" rel="noopener">
+            <span class="when mono">ts · internal</span>
+            <span class="what">Roster</span>
+            <span class="extra mono">manage membrane's directory repo from within membrane itself <span class="tags">· membrane-io</span></span>
+            <span class="arrow">↗</span>
+          </a>
+        </div>
+      </section>
+
+      <section class="wrap sec" id="writing">
+        <h2 class="eyebrow reveal" style="margin-bottom:16px">05 · writing</h2>
+        <div class="rows reveal">
+          <a class="row write" href="writing/roster.html">
+            <span class="when mono">2026-08-05</span>
+            <span class="what">Roster: managing a program directory from inside Membrane</span>
+            <span class="extra mono">membrane</span>
+          </a>
+          <a class="row write" href="writing/vlk-temporal-memory.html">
+            <span class="when mono">2026-04-02</span>
+            <span class="what">Vlk²: teaching agents to stop repeating their mistakes</span>
+            <span class="extra mono">agents</span>
+          </a>
+          <a class="row write" href="writing/agent-vfs.html">
+            <span class="when mono">2026-01-15</span>
+            <span class="what">The virtual file system behind agent-driven editing</span>
+            <span class="extra mono">agents</span>
+          </a>
+        </div>
+        <p class="more reveal"><a href="blog.html">all writing →</a></p>
+      </section>
+    </main>
+
+    <footer class="site-foot">
+      <div class="wrap">
+        <div class="reveal">
+          <a class="foot-mail" href="mailto:jhonnyjosearana@gmail.com">jhonnyjosearana@gmail.com</a>
+        </div>
+        <div class="foot-links mono reveal">
+          <a href="https://github.com/aranajhonny" target="_blank" rel="noopener">github ↗</a>
+          <a href="https://www.linkedin.com/in/aranajhonny" target="_blank" rel="noopener">linkedin ↗</a>
+          <a href="https://twitter.com/aranajhonny" target="_blank" rel="noopener">twitter/x ↗</a>
+        </div>
+        <p class="small-print mono">© <span id="year"></span> jhonny arana · html, css &amp; vanilla js</p>
+      </div>
+    </footer>
+
+    <script src="js/main.js"></script>
   </body>
 </html>

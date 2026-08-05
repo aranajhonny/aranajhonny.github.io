@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Roster: managing a program directory from inside Membrane — jhonny arana</title>
+    <meta name="description" content="A directory repo made of git submodules, a red dot when a program is outdated, and a one-click repin that moves the main branch from inside the platform.">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230b0a08'/%3E%3Crect x='8' y='8' width='16' height='16' fill='%23ffb224'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="../css/style.css">
+  </head>
+  <body>
+    <header class="site-head">
+      <div class="wrap nav">
+        <a class="logo" href="../index.html">jhonnyarana</a>
+        <nav class="nav-links" aria-label="primary">
+          <a href="../index.html">index</a>
+          <a href="../blog.html">writing</a>
+          <a href="https://github.com/aranajhonny" target="_blank" rel="noopener">github ↗</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="wrap post">
+      <a class="back mono" href="../blog.html">← all writing</a>
+      <header class="post-head">
+        <p class="post-meta mono">2026-08-05 <span class="dot-sep">·</span> membrane <span class="dot-sep">·</span> 6 min read</p>
+        <h1>Roster: managing a program directory from inside Membrane</h1>
+        <p class="lead">A directory repo made of git submodules, a red dot when a program is outdated, and a one-click repin that moves the main branch from inside the platform itself.</p>
+      </header>
+
+      <article class="post-body">
+        <p>Membrane's directory is a git repo that lists every program in the platform. Each program is a <strong>git submodule</strong> pinned at a specific commit. The directory repo is the index; the submodules are the entries.</p>
+        <p>Keeping that index honest is a chore: every release of every program changes a sha somewhere, and if nobody repins, the directory drifts from reality. Roster does the chore automatically and runs on Membrane itself. It's ~280 lines of TypeScript plus one UI file.</p>
+
+        <h2>Finding the programs: the submodule signature</h2>
+        <p>The GitHub API returns directory entries without a <code>download_url</code> and with <code>size === 0</code> for submodules. That's the fingerprint:</p>
+        <pre><code>const programs = await directory.content.dir.$query(
+  `{ name sha html_url size download_url }`
+);
+
+const isSubmodule = (item: any) =&gt; !item.download_url &amp;&amp; item.size === 0;
+
+return programs.filter(isSubmodule).map((item) =&gt; ({
+  name: item.name,
+  html_url: item.html_url,
+}));</code></pre>
+        <p>Everything else in the repo — READMEs, config files — gets ignored. The directory's shape <em>is</em> the list of programs.</p>
+
+        <h2>The red dot: comparing two shas</h2>
+        <p>For each program, Roster reads two things: the sha pinned in the directory repo (via <code>content.file({ path: name })</code>) and the program repo's latest commit on <code>main</code>. If they differ, the program is outdated:</p>
+        <pre><code>isOutdated: async (_, { obj }) =&gt; {
+    let lastCommit = obj.commits?.page.items[0].sha;   // program repo, latest
+    let currentCommit = obj.sha;                       // pinned in directory
+    return lastCommit !== currentCommit;
+}</code></pre>
+        <p>The UI renders a green dot for up-to-date programs and a red one for outdated. The "Update" button only appears when it's needed.</p>
+
+        <h2>The repin driver: rewriting the branch in three calls</h2>
+        <p>The interesting part. Updating a program means re-pinning its submodule and moving the directory's <code>main</code> branch to a new commit, all through the GitHub API, from inside the program runtime:</p>
+        <pre><code>update: async (_, { obj }) =&gt; {
+    const { name, url } = obj;
+    const [, user, repo] = url.match("https://github.com/([^/]+)/([^/]+)");
+
+    // 1. get the parent (directory) main sha and the child's main sha
+    const parent: any = await nodes.directory.branches.one({ name: "main" })
+      .commit.sha;
+    const children: any = await nodes.github.users
+      .one({ name: user }).repos.one({ name: repo })
+      .branches.one({ name: "main" }).commit.sha;
+
+    // 2. build a tree with the child pinned at its submodule path
+    const tree: any = await nodes.directory.createTree({
+      base: parent, tree: children, path: name,
+    });
+
+    // 3. commit the tree and move main to point at it
+    const commit: any = await nodes.directory.commits.create({
+      message: `Sync ${name}`, tree, parents: parent,
+    });
+    await nodes.directory.branches
+      .one({ name: "main" }).update({ sha: commit, ref: "heads/main" });
+
+    const program = state.programs.find((p) =&gt; p.name === name);
+    if (program) { program.isOutdated = false; }
+}</code></pre>
+        <p>The three steps mirror what a human does by hand: read the parent sha, write the new submodule pointer into a fresh tree, commit, and fast-forward the branch. The comment in the original says it plainly: <em>"repin driver - update master to point to your commit"</em>.</p>
+
+        <h2>The UI: rendered server-side, no client framework</h2>
+        <p>The whole interface is React rendered to static HTML with <code>renderToString</code>. Two routes:</p>
+        <ul>
+          <li><code>/</code> renders the table: dot, program name, open pull requests (linked straight to the repo), Update button where needed.</li>
+          <li><code>/program?name=</code> renders the detail page: stars, expression count and schema type count parsed from the program's own <code>memconfig.json</code>, last commit, and every open PR rendered with its body via <code>marked</code>.</li>
+        </ul>
+        <p>Program listings are cached in <code>state</code> with a refresh timestamp ("Refreshed 3 minutes ago"), and <code>/refresh</code> clears the cache. No database, no build step, no client bundle; the program is the server.</p>
+
+        <h2>Lessons</h2>
+        <ul>
+          <li>A repo of submodules is a database with a bad UI. The whole tool exists to turn "check shas, repin, commit, push" into a red dot and a button.</li>
+          <li>Compare shas, don't trust timestamps. Two API calls and a string comparison is all the freshness detection needs.</li>
+          <li>Admin tools get dogfooded when they run on the platform they administer. Roster manages Membrane from inside Membrane; the fix for a broken directory uses the same interface as the directory itself.</li>
+          <li>Server-rendered HTML beats a client app for internal tools. No hydration, no API layer, no deploy of frontend assets; one endpoint renders the page.</li>
+        </ul>
+        <p>It's a small tool. The directory index matches reality, and the fix is one click away from the problem.</p>
+      </article>
+
+      <nav class="post-nav mono" aria-label="post navigation">
+        <a href="../blog.html">← all writing</a>
+        <span class="gap"></span>
+        <a href="vlk-temporal-memory.html">next: vlk² →</a>
+      </nav>
+    </main>
+
+    <footer class="site-foot">
+      <div class="wrap">
+        <div class="foot-links mono">
+          <a href="mailto:jhonnyjosearana@gmail.com">jhonnyjosearana@gmail.com</a>
+          <a href="https://github.com/aranajhonny" target="_blank" rel="noopener">github ↗</a>
+          <a href="https://www.linkedin.com/in/aranajhonny" target="_blank" rel="noopener">linkedin ↗</a>
+          <a href="https://twitter.com/aranajhonny" target="_blank" rel="noopener">twitter/x ↗</a>
+        </div>
+        <p class="small-print mono">© <span id="year"></span> jhonny arana · html, css &amp; vanilla js</p>
+      </div>
+    </footer>
+
+    <script src="../js/main.js"></script>
+  </body>
+</html>

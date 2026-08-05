@@ -1,0 +1,172 @@
+% ============================================================================
+%  CV — Jhonny Arana — Single-page, two-column, 12pt
+% ============================================================================
+\documentclass[12pt,letterpaper]{article}
+
+% ── packages ─────────────────────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{parskip}
+\usepackage{hyperref}
+\usepackage{fontawesome5}
+\usepackage{titlesec}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{tabularx}
+\usepackage{ragged2e}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{setspace}
+\usepackage{tikz}
+
+% ── page layout — tight single page ──────────────────────────────────────────
+\geometry{
+  left=0.45in,
+  right=0.45in,
+  top=0.28in,
+  bottom=0.28in,
+}
+
+% ── colors ───────────────────────────────────────────────────────────────────
+\definecolor{accent}{HTML}{1a4d38}
+\definecolor{accentlight}{HTML}{e8f3ec}
+\definecolor{muted}{HTML}{5c6670}
+\definecolor{ruledark}{HTML}{0f2e22}
+\definecolor{textcolor}{HTML}{1c1c1e}
+
+% ── typography ───────────────────────────────────────────────────────────────
+\renewcommand{\familydefault}{\sfdefault}
+\setlength{\parskip}{0pt}
+\setlength{\parindent}{0pt}
+\renewcommand{\baselinestretch}{0.72}
+
+% ── section formatting ───────────────────────────────────────────────────────
+\titleformat{\section}
+  {\normalsize\bfseries\color{accent}}
+  {}{0em}
+  {}[\vspace{-1pt}\color{accent}\rule{\textwidth}{0.5pt}]
+\titlespacing*{\section}{0pt}{3pt}{1pt}
+
+% ── header — name + photo ────────────────────────────────────────────────────
+\newcommand{\cvheader}[1]{%
+  \noindent
+  \begin{minipage}[c]{0.80\textwidth}
+    {\fontsize{26}{28}\selectfont\bfseries\color{ruledark}#1\par}
+    \vspace{1pt}
+    {\normalsize\color{accent}Senior Software Engineer \,$\bullet$\, AI \& Agents Infrastructure \,$\bullet$\, Rust \. TS \. LLMs \. RAG \. Agentic Workflows\par}
+    \vspace{2pt}
+    {\small\color{muted}\faPhone\; +57 3115038123 \hspace{6pt} \faEnvelope\; jhonnyjosearana@gmail.com \hspace{6pt} \faMapMarker\; C\'ucuta, Colombia -- Remote\par}
+    {\small\color{muted}\faLinkedin\; \url{linkedin.com/in/aranajhonny} \hspace{6pt} \faGithub\; \url{github.com/aranajhonny} \hspace{6pt} \faTwitter\; \url{twitter.com/aranajhonny}\par}
+  \end{minipage}%
+  \hfill
+  \begin{minipage}[c]{0.18\textwidth}
+    \centering
+    \vspace{-4pt}
+    \begin{tikzpicture}
+      \clip (0,0) circle (0.6cm);
+      \node at (0,0) {\includegraphics[width=1.2cm,height=1.2cm,keepaspectratio]{jhonny_arana.jpeg}};
+    \end{tikzpicture}
+  \end{minipage}
+  \par\vspace{2pt}
+  \color{accent}\rule{\textwidth}{0.7pt}
+  \vspace{2pt}
+}
+
+% ── experience entry ─────────────────────────────────────────────────────────
+\newcommand{\jobentry}[4]{%
+  \par\vspace{5pt}%
+  \noindent
+  \begin{tabularx}{\textwidth}{@{}X r@{}}
+    \textbf{\color{textcolor}#1} & \scriptsize\color{muted}#2 \\[1pt]
+    \small\itshape\color{accent}#3 & \scriptsize\color{muted}#4 \\
+  \end{tabularx}
+  \vspace{0pt}
+}
+
+\newenvironment{jobbullets}{%
+  \begin{itemize}[leftmargin=10pt,itemsep=0pt,parsep=0pt,topsep=0pt,label=\textcolor{accent}{\tiny$\blacksquare$}]
+  \footnotesize\color{textcolor}
+}{%
+  \end{itemize}
+}
+
+% ── sidebar blocks ───────────────────────────────────────────────────────────
+\newcommand{\sideblock}[2]{%
+  \par\vspace{3pt}%
+  \textbf{\color{accent}\small #1}\par
+  {\footnotesize\color{textcolor}#2}\par
+  \vspace{2pt}
+}
+
+% ── document ─────────────────────────────────────────────────────────────────
+\begin{document}
+\color{textcolor}
+\pagestyle{empty}
+
+% ── HEADER ───────────────────────────────────────────────────────────────────
+\cvheader{Jhonny Arana}
+
+% ── SUMMARY ──────────────────────────────────────────────────────────────────
+\section{Summary}
+{Senior Software Engineer with 7+ years in AI infrastructure, developer tools, and high-performance systems. Co-built the AI Web IDE at Membrane (VFS, npm subsystem, deep VSCode integration for autonomous LLM agents). Hands-on experience fine-tuning LLMs (QLoRA/Unsloth), custom BPE tokenization, and inference optimization. Core: Rust, TypeScript, Python, Node.js, PostgreSQL, Redis. AI: LLM fine-tuning, agentic workflows, RAG, prompt engineering, vector DBs, MCP.}
+
+% ── TWO COLUMN BODY ──────────────────────────────────────────────────────────
+\noindent
+\begin{minipage}[t]{0.70\textwidth}
+\section{Experience}
+
+\jobentry{s2tindustriales.com}{Jun 2026 -- Present}{Senior Engineer}{La Victoria, VE}
+\begin{jobbullets}
+\item IoT full-stack for real-time thermal monitoring -- React/TS, Node.js/Express, MySQL, Redis, WebSocket.
+\item Alert engine with encrypted telemetry, executive dashboard, automated reporting.
+\end{jobbullets}
+
+\jobentry{Wai.lat}{Jan 2026 -- May 2026}{AI Engineer}{Valencia, VE}
+\begin{jobbullets}
+\item WhatsApp SaaS AI module: multi-layer prompt stacking, RAG context, sliding-window memory, anti-hallucination.
+\item Whisper over GPT-4, human handoff, token/credit tracking; React, Express, PostgreSQL, Redis, Bull, Docker.
+\end{jobbullets}
+
+\jobentry{Membrane}{Feb 2019 -- May 2020 \\ Jan 2023 -- Jan 2026}{Full-Stack $\rightarrow$ Senior Engineer -- AI Web IDE}{California / Miami, FL (Remote)}
+\begin{jobbullets}
+\item Two stints at Membrane, growing from full-stack to Senior Engineer of the AI Web IDE.
+\item \textbf{2nd stint (2023--26):} Co-architected the AI Web IDE: LLM agents autonomously navigate, edit, and run code in a cloud sandbox. VFS with diff tracking, merge conflict detection, undo for agent-driven editing.
+\item Built deep VSCode extensions: terminal emulation, editor decorations, diagnostics bridging.
+\item Engineered npm subsystem: auto dependency install, cache optimization, lockfile reconciliation.
+\item WebSocket real-time sync streaming files, terminal, and execution results ($<$100ms latency).
+\item LLM fine-tuning pipeline: QLoRA/Unsloth on Qwen2.5-Coder-3B, custom BPE tokenizer, FIM data generation, AWQ quantization for production inference.
+\item \textbf{1st stint (2019--20):} Full-stack product work across React, Node.js, PostgreSQL for early AI products.
+\end{jobbullets}
+
+\jobentry{Alphas Remote Team}{Dec 2020 -- Sep 2021 \\ Nov 2021 -- Nov 2022}{Senior Frontend $\rightarrow$ Lead Frontend Engineer (React)}{Colombia (Remote)}
+\begin{jobbullets}
+\item Promoted to Lead Frontend Engineer across two stints. Led architecture, code review, and delivery for concurrent products.
+\item Wdna PortsIB (port monitoring, Balearic Islands Port Authority), Wdna Entropy (executive dashboards), Altiplas (legal docs), Meetpoint.education.
+\end{jobbullets}
+
+\jobentry{Bee Marketing \& Design}{May 2020 -- Dec 2021}{Frontend Developer (React, WP)}{Santander, CO}
+\begin{jobbullets}
+\item Aguas Kpital corporate site, Coucou WooCommerce store; maintained soulshoes.com.co ($>$10K users/mo) and acaai.co.
+\end{jobbullets}
+\end{minipage}%
+\hfill
+\begin{minipage}[t]{0.27\textwidth}
+
+\sideblock{SKILLS}{\textbf{Languages:} Python, Rust, TypeScript, JavaScript, Node.js, PHP.\\
+\textbf{AI / LLM:} PyTorch, HuggingFace, Unsloth (QLoRA/LoRA), BPE Tokenization, FIM Training, AWQ Quantization, RAG, MCP, Agentic Workflows, Vector DBs, Prompt Engineering.\\
+\textbf{Backend:} Express, PostgreSQL, Redis, MySQL, WebSocket, Socket.IO.\\
+\textbf{Frontend:} React, Redux, Tailwind, Vue.js, WordPress.\\
+\textbf{Infra:} Docker, CI/CD, cloud sandboxes, npm subsystems, Vast.ai GPU provisioning, Bull queues.}
+\sideblock{EDUCATION}{\textbf{B.S. Computer Engineering}\\
+Universidad Polit\'ecnica Territorial de Aragua (UPTA) \,$\bullet$\, 2014--2019}
+
+\sideblock{LANGUAGES}{Spanish (Native) \,$\bullet$\, English (Intermediate --- B2 in progress)}
+
+\sideblock{KEY PROJECTS}{\textbf{Vlk MCP Server} -- memory-as-action for agents (SQLite WAL).\\
+\textbf{BPE Tokenizer (Rust + Python)} -- custom Byte Pair Encoding tokenizer in Rust with pyo3 bindings, supports domain-specific vocabulary injection.\\
+\textbf{Zero-Hallucination RAG} -- 936 Lex Fridman episodes, exact transcript chunks.\\
+\textbf{WhatsApp AI Platform} -- multi-tenant SaaS, prompt stacking + handoff.}
+\end{minipage}
+
+\end{document}
