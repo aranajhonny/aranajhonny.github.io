@@ -11,19 +11,17 @@
   <body>
     <header class="site-head">
       <div class="wrap nav">
-        <a class="logo" href="../index.html">jhonnyarana</a>
         <nav class="nav-links" aria-label="primary">
-          <a href="../index.html">index</a>
-          <a href="../blog.html">writing</a>
-          <a href="https://github.com/aranajhonny" target="_blank" rel="noopener">github ↗</a>
+          <a href="../index.html">Root</a>
+          <a href="../blog.html">Articles</a>
         </nav>
       </div>
     </header>
 
     <main class="wrap post">
-      <a class="back mono" href="../blog.html">← all writing</a>
+      <a class="back" href="../blog.html">← all writing</a>
       <header class="post-head">
-        <p class="post-meta mono">2026-03-20 <span class="dot-sep">·</span> rag <span class="dot-sep">·</span> 8 min read</p>
+        <p class="post-meta">March 20, 2026 <span class="dot-sep">·</span> rag <span class="dot-sep">·</span> 8 min read</p>
         <h1>Zero-hallucination RAG: grounded answers over 936 Lex Fridman episodes</h1>
         <p class="lead">Every answer cites its source. Intent routing, Qdrant, and a groundedness check that rejects answers the transcripts don't support.</p>
       </header>
@@ -90,22 +88,22 @@ def verify_groundedness(answer: str, context: list[Chunk]) -&gt; str:
         <p>The system answers with confidence only where the transcripts are confident, and every answer carries a source you can check.</p>
       </article>
 
-      <nav class="post-nav mono" aria-label="post navigation">
-        <a href="bpe-tokenizer-rust.html">← previous: bpe tokenizer</a>
+      <nav class="post-nav" aria-label="post navigation">
+        <a href="../blog.html">← all writing</a>
         <span class="gap"></span>
-        <a href="vlk-temporal-memory.html">next: vlk² →</a>
+        <a href="bpe-tokenizer-rust.html">next: bpe tokenizer →</a>
       </nav>
     </main>
 
     <footer class="site-foot">
       <div class="wrap">
-        <div class="foot-links mono">
-          <a href="mailto:jhonnyjosearana@gmail.com">jhonnyjosearana@gmail.com</a>
+        <div class="foot-links">
+          <a href="mailto:jhonnyjosearana@gmail.com">email</a>
           <a href="https://github.com/aranajhonny" target="_blank" rel="noopener">github ↗</a>
           <a href="https://www.linkedin.com/in/aranajhonny" target="_blank" rel="noopener">linkedin ↗</a>
           <a href="https://twitter.com/aranajhonny" target="_blank" rel="noopener">twitter/x ↗</a>
         </div>
-        <p class="small-print mono">© <span id="year"></span> jhonny arana · html, css &amp; vanilla js</p>
+        <p class="small-print">© <span id="year"></span> jhonny arana · all rights reserved</p>
       </div>
     </footer>
 
