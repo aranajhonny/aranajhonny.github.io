@@ -172,7 +172,7 @@ h3 {
 .hero-title {
   font-size: 1.5rem;           /* text-2xl */
   font-weight: 600;
-  letter-spacing: -0.05em;     /* tracking-tighter */
+  letter-spacing: -0.03em;     /* tightened but natural */
   margin-bottom: 2rem;         /* mb-8 */
 }
 
@@ -267,7 +267,7 @@ a.row:hover .arrow {
 .row.write .what {
   font-size: 1rem;
   font-weight: 500;
-  letter-spacing: -0.025em;    /* tracking-tight */
+  letter-spacing: -0.015em;    /* slight tightness */
   color: var(--text);          /* text-neutral-900 dark:text-neutral-100 */
 }
 
@@ -365,7 +365,7 @@ a.row:hover .arrow {
 .post-head h1 {
   font-size: 1.5rem;
   font-weight: 600;
-  letter-spacing: -0.05em;     /* tracking-tighter */
+  letter-spacing: -0.03em;     /* tightened but natural */
   margin-bottom: 0.5rem;       /* mt-2 under title */
 }
 
