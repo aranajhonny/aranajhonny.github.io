@@ -5,49 +5,34 @@
    ============================================================ */
 
 :root {
-  --bg: #ffffff;
-  --text: #171717;             /* neutral-900 */
-  --text-2: #262626;           /* neutral-800 */
-  --muted: #525252;            /* neutral-600 */
-  --faint: #a3a3a3;            /* neutral-400 */
-  --line: rgba(0, 0, 0, 0.1);
-  --code-bg: #fafafa;          /* neutral-50 */
-  --code-border: #e5e5e5;      /* neutral-200 */
+  --bg: #0a0a0a;               /* near-black, not pure */
+  --surface: #141414;          /* row hover */
+  --text: #ededed;             /* near-white, not pure */
+  --text-2: #e5e5e5;           /* hover states */
+  --muted: #a3a3a3;            /* secondary */
+  --faint: #737373;            /* tertiary */
+  --line: rgba(255, 255, 255, 0.1);
+  --code-bg: #171717;          /* neutral-900 */
+  --code-border: #262626;      /* neutral-800 */
   --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto,
     "Helvetica Neue", Arial, sans-serif;
   --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Fira Code", Menlo,
     Consolas, monospace;
 
-  /* syntax highlighting tokens (sugar-high palette, light) */
-  --sh-class: #2d5e9d;
-  --sh-identifier: #354150;
+  /* syntax highlighting tokens (sugar-high palette, dark) */
+  --sh-class: #4c97f8;
+  --sh-identifier: #ededed;
   --sh-sign: #8996a3;
-  --sh-string: #007f7a;
-  --sh-keyword: #e02518;
+  --sh-string: #0fa295;
+  --sh-keyword: #f47067;
   --sh-comment: #a19595;
   --sh-jsxliterals: #6266d1;
   --sh-property: #e25a1c;
   --sh-entity: #e25a1c;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #000000;
-    --text: #f5f5f5;           /* neutral-100 */
-    --text-2: #e5e5e5;         /* neutral-200 */
-    --muted: #a3a3a3;          /* neutral-400 */
-    --faint: #737373;          /* neutral-500 */
-    --line: rgba(255, 255, 255, 0.12);
-    --code-bg: #171717;        /* neutral-900 */
-    --code-border: #171717;
-    --sh-class: #4c97f8;
-    --sh-identifier: #ffffff;
-    --sh-keyword: #f47067;
-    --sh-string: #0fa295;
-  }
-  html {
-    color-scheme: dark;
-  }
+html {
+  color-scheme: dark;
 }
 
 /* ---------- reset ---------- */
@@ -73,7 +58,7 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  max-width: 36rem;            /* max-w-xl */
+  max-width: 44rem;            /* roomier than the template's 36rem */
   margin: 2rem auto 0;
   padding: 0 1rem;
 }
@@ -217,7 +202,7 @@ h3 {
 }
 
 .row:hover {
-  background: var(--code-bg);
+  background: var(--surface);
 }
 
 .row .when {
