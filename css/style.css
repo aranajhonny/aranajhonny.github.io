@@ -207,14 +207,15 @@ h3 {
 }
 
 .row .when {
+  font-family: var(--sans);
   font-size: 0.875rem;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
 
 .row .what {
-  font-size: 1rem;
-  font-weight: 500;
+  font-size: 0.9375rem;
+  font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--text);
 }
@@ -225,16 +226,19 @@ a.row:hover .what {
 
 .row .who,
 .row .extra {
-  font-size: 0.8125rem;
+  font-family: var(--sans);
+  font-size: 0.875rem;
   color: var(--faint);
 }
 
 .row .tags {
-  font-size: 0.92em;
+  font-size: 0.95em;
   color: var(--muted);
 }
 
 .row .arrow {
+  font-family: var(--sans);
+  font-size: 0.875rem;
   color: var(--faint);
   transition: color 0.15s ease, transform 0.15s ease;
 }
@@ -266,9 +270,8 @@ a.row:hover .arrow {
 }
 
 .row.write .what {
-  font-size: 1rem;
-  font-weight: 500;
-  letter-spacing: -0.015em;    /* slight tightness */
+  font-weight: 600;
+  letter-spacing: -0.01em;
   color: var(--text);          /* text-neutral-900 dark:text-neutral-100 */
 }
 
