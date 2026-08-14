@@ -10,7 +10,7 @@
   --text: #171717;             /* near-black text, not pure */
   --text-2: #262626;           /* hover states */
   --muted: #525252;            /* secondary */
-  --faint: #a3a3a3;            /* tertiary */
+  --faint: #737373;            /* tertiary — 4.6:1, WCAG AA on white */
   --line: rgba(0, 0, 0, 0.1);
   --code-bg: #fafafa;          /* neutral-50 */
   --code-border: #e5e5e5;      /* neutral-200 */
