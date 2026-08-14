@@ -4,7 +4,20 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Roster: managing a program directory from inside Membrane — jhonny arana</title>
-    <meta name="description" content="A directory repo made of git submodules, a red dot when a program is outdated, and a one-click repin that moves the main branch from inside the platform.">
+    <meta name="description" content="A directory repo made of git submodules, a red dot when a program is outdated, and a one-click repin that moves the main branch from inside the platform."
+    <meta property="og:title" content="Roster: managing a program directory from inside Membrane"/>
+    <meta property="og:description" content="A directory repo made of git submodules, a red dot when a program is outdated, and a one-click repin that moves the main branch from inside the platform."/>
+    <meta property="og:type" content="article"/>
+    <meta property="og:url" content="https://aranajhonny.github.io/writing/roster.html"/>
+    <meta property="og:image" content="https://aranajhonny.github.io/og/roster.png"/>
+    <meta property="og:site_name" content="Jhonny Arana"/>
+    <meta property="og:locale" content="en_US"/>
+    <meta name="twitter:card" content="summary_large_image"/>
+    <meta name="twitter:title" content="Roster: managing a program directory from inside Membrane"/>
+    <meta name="twitter:description" content="A directory repo made of git submodules, a red dot when a program is outdated, and a one-click repin that moves the main branch from inside the platform."/>
+    <meta name="twitter:image" content="https://aranajhonny.github.io/og/roster.png"/>
+    <meta property="article:published_time" content="2026-08-05"/>
+>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230b0a08'/%3E%3Crect x='8' y='8' width='16' height='16' fill='%23ffb224'/%3E%3C/svg%3E">
     <link rel="stylesheet" href="../css/style.css">
   </head>
@@ -21,8 +34,7 @@
     <main class="wrap post">
       <a class="back" href="../blog.html">← all writing</a>
       <header class="post-head">
-        <p class="post-meta">August 5, 2026 <span class="dot-sep">·</span> membrane <span class="dot-sep">·</span> 6 min read</p>
-        <h1>Roster: managing a program directory from inside Membrane</h1>
+        <h1 class="title">Roster: managing a program directory from inside Membrane</h1><p class="post-meta">August 5, 2026 <span class="dot-sep">·</span> membrane <span class="dot-sep">·</span> 6 min read</p>
         <p class="lead">A directory repo made of git submodules, a red dot when a program is outdated, and a one-click repin that moves the main branch from inside the platform itself.</p>
       </header>
 
@@ -110,13 +122,33 @@ return programs.filter(isSubmodule).map((item) =&gt; ({
 
     <footer class="site-foot">
       <div class="wrap">
-        <div class="foot-links">
-          <a href="mailto:jhonnyjosearana@gmail.com">email</a>
-          <a href="https://github.com/aranajhonny" target="_blank" rel="noopener">github ↗</a>
-          <a href="https://www.linkedin.com/in/aranajhonny" target="_blank" rel="noopener">linkedin ↗</a>
-          <a href="https://twitter.com/aranajhonny" target="_blank" rel="noopener">twitter/x ↗</a>
-        </div>
-        <p class="small-print">© <span id="year"></span> jhonny arana · all rights reserved</p>
+        <ul class="foot-links">
+          <li>
+            <a rel="noopener noreferrer" href="mailto:jhonnyjosearana@gmail.com">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.07102 11.3494L0.963068 10.2415L9.2017 1.98864H2.83807L2.85227 0.454545H11.8438V9.46023H10.2955L10.3097 3.09659L2.07102 11.3494Z" fill="currentColor"></path></svg>
+              <p>email</p>
+            </a>
+          </li>
+          <li>
+            <a rel="noopener noreferrer" target="_blank" href="https://github.com/aranajhonny">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.07102 11.3494L0.963068 10.2415L9.2017 1.98864H2.83807L2.85227 0.454545H11.8438V9.46023H10.2955L10.3097 3.09659L2.07102 11.3494Z" fill="currentColor"></path></svg>
+              <p>github</p>
+            </a>
+          </li>
+          <li>
+            <a rel="noopener noreferrer" target="_blank" href="https://www.linkedin.com/in/aranajhonny">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.07102 11.3494L0.963068 10.2415L9.2017 1.98864H2.83807L2.85227 0.454545H11.8438V9.46023H10.2955L10.3097 3.09659L2.07102 11.3494Z" fill="currentColor"></path></svg>
+              <p>linkedin</p>
+            </a>
+          </li>
+          <li>
+            <a rel="noopener noreferrer" target="_blank" href="https://twitter.com/aranajhonny">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.07102 11.3494L0.963068 10.2415L9.2017 1.98864H2.83807L2.85227 0.454545H11.8438V9.46023H10.2955L10.3097 3.09659L2.07102 11.3494Z" fill="currentColor"></path></svg>
+              <p>twitter/x</p>
+            </a>
+          </li>
+        </ul>
+        <p class="small-print">© <span id="year"></span> All rights reserved.</p>
       </div>
     </footer>
 
